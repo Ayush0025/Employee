@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8cf49666-990d-41ba-8731-eba5f63fe421" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="ee37eae7-2c3b-4690-81db-0b713839856b" >
+		<db:my-sql-connection host="sql6.freesqldatabase.com" port="3306" user="sql6508830" password="T74xg9h5bM" database="sql6508830" />
+	</db:config>
+	<flow name="insertflow" doc:id="3c4599c5-18ae-49b5-9606-970b6a5df01a" >
+		<http:listener doc:name="Listener" doc:id="a22b656e-dc58-49d9-bff8-9b6a9f84d268" config-ref="HTTP_Listener_config" path="/employee" allowedMethods="POST"/>
+		<db:insert doc:name="Insert" doc:id="1fae21a3-b6a3-4062-a84f-477bd4a0d968" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee values(:E_ID,:E_NAME,:E_SALARY)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'E_ID':payload.E_ID,'E_NAME':payload.E_NAME,'E_SALARY':payload.E_SALARY}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="bdc1c6cb-939c-46de-998b-a4b901ddd9f1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"data added successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getEmployee" doc:id="2c2e653e-8481-4792-a105-06e48c118cec" >
+		<http:listener doc:name="Listener" doc:id="2cd68c2f-8a55-4603-8c17-fd9c9b6593db" config-ref="HTTP_Listener_config" path="/employee" allowedMethods="GET"/>
+		<db:select doc:name="Select" doc:id="82066f0c-a5cf-45dc-8894-b756ef99ceda" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d6f8de08-720c-49de-b543-51622de19fe8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
